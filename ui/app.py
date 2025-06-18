@@ -1,3 +1,5 @@
+# ui/app.py
+
 import streamlit as st
 import requests
 
@@ -7,8 +9,7 @@ query = st.text_input("Enter job role or skills:")
 
 if st.button("Recommend"):
     if query:
-        res = requests.post("http://localhost:8000/recommend", json={"query": query})
-        recommended = res.json()["recommended_assessment"]
-        st.subheader("Recommended Assessment:")
-        st.write(recommended["title"])
-        st.write("Skills:", ", ".join(recommended["skills"]))
+        res = requests.get("https://your-fastapi-app.onrender.com/recommend", params={"query": query})
+        for rec in res.json()["recommendations"]:
+            st.subheader(rec["name"])
+            st.write(", ".join(rec["tags"]))
