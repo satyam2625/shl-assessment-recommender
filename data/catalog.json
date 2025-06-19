@@ -1,17 +1,8 @@
-[
-  {
-    "name": "Python Backend Assessment",
-    "description": "Test for backend developers using Python and Django",
-    "tags": ["python", "backend", "django"]
-  },
-  {
-    "name": "Data Analysis Assessment",
-    "description": "Evaluate data analysis skills using pandas and NumPy",
-    "tags": ["data", "analysis", "pandas", "numpy"]
-  },
-  {
-    "name": "Frontend React Assessment",
-    "description": "Test knowledge of frontend development using React.js",
-    "tags": ["frontend", "react", "javascript"]
-  }
-]
+{
+  "recommendations": [
+    {
+      "title": "Backend Developer Test",
+      "tags": ["python","backend","api"]
+    }
+  ]
+}
