@@ -1,25 +1,20 @@
-
-def recommend(query, catalog, top_k=3):
-    from sklearn.metrics.pairwise import cosine_similarity
-    from sentence_transformers import SentenceTransformer
-    import numpy as np
-
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-
-    query_embedding = model.encode([query])
-    catalog_embeddings = model.encode([item['description'] for item in catalog])
-
-    similarities = cosine_similarity(query_embedding, catalog_embeddings)[0]
-    top_indices = np.argsort(similarities)[::-1][:top_k]
-    
-    recommendations = [catalog[i] for i in top_indices]
-    return recommendations
-
-import json
-import os
+import json, os
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
 def load_catalog():
-    path = os.path.join(os.path.dirname(__file__), "..", "data", "catalog.json")
-    with open(path, "r", encoding="utf-8") as f:
+    path = os.path.join(os.path.dirname(__file__), '..', 'data', 'catalog.json')
+    with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
+
+def recommend_assessment(query: str):
+    catalog = load_catalog()
+    titles = [item["title"] for item in catalog]
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    embeddings = model.encode(titles + [query])
+    sims = cosine_similarity([embeddings[-1]], embeddings[:-1])[0]
+    best = int(np.argmax(sims))
+    return catalog[best]
+
 
