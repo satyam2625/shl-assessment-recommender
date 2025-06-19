@@ -2,21 +2,20 @@ import streamlit as st
 import requests
 
 st.title("SHL Assessment Recommendation Engine")
-
 query = st.text_input("Enter job role or skills:")
 
-if st.button("Recommend"):
-    if query:
-        try:
-            res = requests.get("https://your-api-url.onrender.com/recommend", params={"query": query})
+if query:
+    try:
+        res = requests.post("https://your-backend-url.onrender.com/recommend", json={"query": query})
+        recommendations = res.json()["recommendations"]
+        for rec in recommendations:
+            st.subheader(rec["title"])
+            st.write("Tags:", ", ".join(rec["tags"]))
+    except Exception as e:
+        st.error("Failed to fetch recommendations. Please try again.")
 
-            if res.status_code == 200:
-                data = res.json()
-                for rec in data["recommendations"]:
-                    st.subheader(rec["name"])
-                    st.write(", ".join(rec["tags"]))
-            else:
-                st.error(f"API Error {res.status_code}: {res.text}")
+        res = requests.post(
+  "https://shl-assessment-recommender.onrender.com/recommend",
+  json={"query": query}
+)
 
-        except requests.exceptions.RequestException as e:
-            st.error(f"Request failed: {e}")
