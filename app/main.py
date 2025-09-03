@@ -1,13 +1,13 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-from app.recommender import recommend_assessment
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-class UserInput(BaseModel):
-    query: str
-
-@app.post("/recommend")
-def recommend(input: UserInput):
-    rec = recommend_assessment(input.query)
-    return {"recommendations": [rec]}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # use specific origin in prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# rest of your imports and endpoints...

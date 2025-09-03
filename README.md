@@ -13,7 +13,7 @@ A FastAPI + Sentence Transformers-powered recommendation engine that recommends 
 
 # SHL Assessment Recommender
 
-**Live API**: [Try the API →](https://shl-assessment-recommender.onrender.com/recommend?query=python)  
+**Live API**: [Try the API →]https://shl-assessment-recommender.onrender.com/recommend?query=python
 **Live UI**: [Streamlit App](https://shl-assessment-recommender-8gei6grfgadfzhje2kj3jv.streamlit.app/)
 
 Add live deployment links to README
