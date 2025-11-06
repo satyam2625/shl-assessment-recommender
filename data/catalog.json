@@ -2,7 +2,27 @@
   "recommendations": [
     {
       "title": "Backend Developer Test",
-      "tags": ["python","backend","api"]
+      "tags": ["python", "backend", "api", "django", "flask", "sql"]
+    },
+    {
+      "title": "Frontend React Assessment",
+      "tags": ["javascript", "react", "frontend", "css", "html", "web"]
+    },
+    {
+      "title": "Data Scientist Assessment",
+      "tags": ["data science", "python", "machine learning", "statistics", "sql", "pandas"]
+    },
+    {
+      "title": "DevOps Engineer Test",
+      "tags": ["aws", "docker", "kubernetes", "ci/cd", "linux", "terraform"]
+    },
+    {
+      "title": "Mobile Developer (Swift/iOS)",
+      "tags": ["mobile", "ios", "swift", "xcode", "ui/ux"]
+    },
+    {
+      "title": "QA Automation Engineer",
+      "tags": ["qa", "testing", "selenium", "python", "automation", "ci/cd"]
     }
   ]
 }
