@@ -5,16 +5,28 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # --- Global State ---
-# Load model once
-MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+# We do NOT load the model immediately here anymore.
+MODEL = None
 CATALOG = {}
 CATALOG_EMBEDDINGS = None
 
-def load_catalog_and_embeddings():
-    """Loads catalog and pre-computes embeddings on startup."""
+def get_model():
+    """Lazy loads the model only when needed."""
+    global MODEL
+    if MODEL is None:
+        print("⏳ Loading AI Model for the first time... (might take a few seconds)")
+        MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+        print("✅ Model loaded successfully!")
+    return MODEL
+
+def load_catalog_if_needed():
+    """Loads catalog and embeddings if they aren't loaded yet."""
     global CATALOG, CATALOG_EMBEDDINGS
     
-    # Robust path to data/catalog.json
+    # If already loaded, skip
+    if CATALOG:
+        return
+
     base_dir = Path(__file__).resolve().parent.parent
     catalog_path = base_dir / "data" / "catalog.json"
     
@@ -25,33 +37,40 @@ def load_catalog_and_embeddings():
     except FileNotFoundError:
         print(f"❌ Error: catalog.json not found at {catalog_path}")
         CATALOG = {"recommendations": []}
+        CATALOG_EMBEDDINGS = np.array([])
+        return
 
-    # Pre-compute embeddings if catalog exists
+    # Pre-compute embeddings
     recs = CATALOG.get("recommendations", [])
     if recs:
+        # Ensure model is loaded before computing embeddings
+        model = get_model()
         descriptions = [f"{item['title']} {' '.join(item.get('tags', []))}" for item in recs]
-        CATALOG_EMBEDDINGS = MODEL.encode(descriptions)
+        CATALOG_EMBEDDINGS = model.encode(descriptions)
         print("✅ Catalog embeddings pre-computed")
     else:
         CATALOG_EMBEDDINGS = np.array([])
 
-# Initialize on module import
-load_catalog_and_embeddings()
-
 def recommend(query: str, k: int = 5):
     """Recommends items using pre-computed embeddings."""
-    if not CATALOG.get("recommendations") or CATALOG_EMBEDDINGS.size == 0:
+    # Ensure everything is loaded before we try to recommend
+    load_catalog_if_needed()
+    
+    if not CATALOG.get("recommendations") or CATALOG_EMBEDDINGS is None or CATALOG_EMBEDDINGS.size == 0:
         return []
 
-    # 1. Encode the user query
-    query_embedding = MODEL.encode([query])
+    # 1. Get the model (will load if it's the first time)
+    model = get_model()
+    
+    # 2. Encode the user query
+    query_embedding = model.encode([query])
 
-    # 2. Calculate similarity using pre-computed embeddings
+    # 3. Calculate similarity
     sims = cosine_similarity(query_embedding, CATALOG_EMBEDDINGS)[0]
 
-    # 3. Get top k indices
+    # 4. Get top k indices
     top_indices = np.argsort(sims)[::-1][:k]
 
-    # 4. Return results
+    # 5. Return results
     recs = CATALOG["recommendations"]
     return [recs[i] for i in top_indices]
