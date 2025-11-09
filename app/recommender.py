@@ -1,50 +1,57 @@
 import json
-import os
 import numpy as np
+from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Load the model once when the app starts for efficiency
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# --- Global State ---
+# Load model once
+MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+CATALOG = {}
+CATALOG_EMBEDDINGS = None
 
-def load_catalog():
-    """Loads the assessment catalog from the JSON file."""
-    # Use an absolute path to be safe in all environments
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'catalog.json')
+def load_catalog_and_embeddings():
+    """Loads catalog and pre-computes embeddings on startup."""
+    global CATALOG, CATALOG_EMBEDDINGS
+    
+    # Robust path to data/catalog.json
+    base_dir = Path(__file__).resolve().parent.parent
+    catalog_path = base_dir / "data" / "catalog.json"
+    
     try:
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        with open(catalog_path, "r", encoding="utf-8") as f:
+            CATALOG = json.load(f)
+            print(f"✅ Catalog loaded from {catalog_path}")
     except FileNotFoundError:
-        print("Error: catalog.json not found.")
-        return {"recommendations": []}
+        print(f"❌ Error: catalog.json not found at {catalog_path}")
+        CATALOG = {"recommendations": []}
 
-def recommend(query: str, k: int = 5, catalog=None):
-    """Recommends top k assessments based on a query."""
-    if catalog is None:
-        catalog = load_catalog()
-    
-    # Correctly access the list of recommendations
-    recommendations_list = catalog.get('recommendations', [])
-    
-    if not recommendations_list:
+    # Pre-compute embeddings if catalog exists
+    recs = CATALOG.get("recommendations", [])
+    if recs:
+        descriptions = [f"{item['title']} {' '.join(item.get('tags', []))}" for item in recs]
+        CATALOG_EMBEDDINGS = MODEL.encode(descriptions)
+        print("✅ Catalog embeddings pre-computed")
+    else:
+        CATALOG_EMBEDDINGS = np.array([])
+
+# Initialize on module import
+load_catalog_and_embeddings()
+
+def recommend(query: str, k: int = 5):
+    """Recommends items using pre-computed embeddings."""
+    if not CATALOG.get("recommendations") or CATALOG_EMBEDDINGS.size == 0:
         return []
 
-    # Extract titles and tags to create a descriptive text for each item
-    descriptions = [
-        f"{item['title']} {' '.join(item.get('tags', []))}" 
-        for item in recommendations_list
-    ]
-    
-    # Encode all descriptions and the query
-    catalog_embeddings = model.encode(descriptions)
-    query_embedding = model.encode([query])
+    # 1. Encode the user query
+    query_embedding = MODEL.encode([query])
 
-    # Calculate similarity
-    sims = cosine_similarity(query_embedding, catalog_embeddings)[0]
-    
-    # Get the indices of the top k most similar items
-    # This replaces np.argmax which only gives 1 result
+    # 2. Calculate similarity using pre-computed embeddings
+    sims = cosine_similarity(query_embedding, CATALOG_EMBEDDINGS)[0]
+
+    # 3. Get top k indices
     top_indices = np.argsort(sims)[::-1][:k]
-    
-    # Return the corresponding full items from the catalog
-    return [recommendations_list[i] for i in top_indices]
+
+    # 4. Return results
+    recs = CATALOG["recommendations"]
+    return [recs[i] for i in top_indices]
