@@ -58,7 +58,7 @@ if submitted:
     else:
         with st.spinner("🤖 Analyzing requirements..."):
             try:
-                response = requests.get(f"{API_URL}/recommend", params={"query": query, "k": 5}, timeout=15)
+                response = requests.get(f"{API_URL}/recommend", params={"query": query, "k": 5}, timeout=60)
                 
                 if response.status_code == 200:
                     data = response.json()
