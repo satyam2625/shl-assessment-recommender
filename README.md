@@ -50,5 +50,7 @@ Open a second, new terminal and run:
 
 streamlit run ui/app.py
 
+https://shl-assessment-recommender-8gei6grfgadfzhje2kj3jv.streamlit.app/
+
 
 The web app will open in your browser at http://localhost:8501.
